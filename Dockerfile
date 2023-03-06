@@ -1,10 +1,14 @@
-FROM node:14
+# syntax=docker/dockerfile:1
 
-WORKDIR /client
+FROM node:18-alpine
+ENV NODE_ENV=production
 
-COPY package*.json ./
-RUN npm install
+WORKDIR /app
+
+COPY ["package.json", "package-lock.json*", "./"]
+
+RUN npm install --production
 
 COPY . .
 
-CMD [ "npm", "run dev" ]
+CMD [ "node", "run dev" ]
