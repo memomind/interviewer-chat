@@ -6,7 +6,7 @@ import {Configuration, OpenAIApi} from 'openai';
 const form = document.querySelector('form')
 const chatcontainer = document.querySelector('#chat_container')
 const config = new Configuration({
-    apiKey: "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",
+    apiKey: process.env.OPENAI_KEY
 })
 const openai = new OpenAIApi(config)
 let loadInterval;
