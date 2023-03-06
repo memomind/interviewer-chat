@@ -1,15 +1,15 @@
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
-import express from 'express'
-import cors from 'cors'
 import {Configuration, OpenAIApi} from 'openai';
-import * as dotenv from 'dotenv'
 
-dotenv.config()
+const apikey1 = "sk-0uSFX7Ou4HWx8jMUm"
+const apikey2 = "KHhT3BlbkFJYgPx"
+
+
 const form = document.querySelector('form')
 const chatcontainer = document.querySelector('#chat_container')
 const config = new Configuration({
-    apiKey: process.env.OPENAI_KEY
+    apiKey: apikey1+apikey2+"w6hLxSxDDvrW9o0h"
 })
 const openai = new OpenAIApi(config)
 let loadInterval;
