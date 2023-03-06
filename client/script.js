@@ -1,120 +1,148 @@
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
+import {Configuration, OpenAIApi} from 'openai';
+
 
 const form = document.querySelector('form')
-const chatContainer = document.querySelector('#chat_container')
+const chatcontainer = document.querySelector('#chat_container')
+const config = new Configuration({
+    apiKey: "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",
+})
+const openai = new OpenAIApi(config)
+let loadInterval;
 
-let loadInterval
+const user_info = []
 
-function loader(element) {
-    element.textContent = ''
 
-    loadInterval = setInterval(() => {
-        // Update the text content of the loading indicator
+function loader(element){
+    element.testContent = ''
+
+    loadInterval = setInterval(()=>{
         element.textContent += '.';
 
-        // If the loading indicator has reached three dots, reset it
-        if (element.textContent === '....') {
-            element.textContent = '';
+        if (element.textContent === '...'){
+            element.testContent = '';
         }
-    }, 300);
+    }, 300)
 }
 
-function typeText(element, text) {
+function typeText(element, text){
     let index = 0
+    text = String(text)
 
-    let interval = setInterval(() => {
-        if (index < text.length) {
-            element.innerHTML += text.charAt(index)
-            index++
-        } else {
+    let interval = setInterval(()=>{
+        if (index<text.length){
+            element.innerHTML += text.charAt(index);
+            index ++;
+        }
+        else{
             clearInterval(interval)
         }
-    }, 20)
+    },20)
 }
 
-// generate unique ID for each message div of bot
-// necessary for typing text effect for that specific reply
-// without unique ID, typing text will work on every element
-function generateUniqueId() {
+function generateUniqueID(){
     const timestamp = Date.now();
     const randomNumber = Math.random();
     const hexadecimalString = randomNumber.toString(16);
 
-    return `id-${timestamp}-${hexadecimalString}`;
+    return `id-${timestamp}-${hexadecimalString}`
 }
 
-function chatStripe(isAi, value, uniqueId) {
-    return (
-        `
-        <div class="wrapper ${isAi && 'ai'}">
-            <div class="chat">
-                <div class="profile">
-                    <img 
-                      src=${isAi ? bot : user} 
-                      alt="${isAi ? 'bot' : 'user'}" 
-                    />
-                </div>
-                <div class="message" id=${uniqueId}>${value}</div>
-            </div>
-        </div>
+
+function chatStripe (isAI,value,uniqueId){
+return (
     `
-    )
+    <div class = "wrapper ${isAI && 'ai'}">
+    <div class = "chat">
+    <div class="profile">
+    <img src="${isAI ? bot: user}" alt="${isAI ? 'bot': 'user'}">
+</div>
+
+<div class="message" id="${uniqueId}">${value}</div>
+    
+</div>
+    </div>
+    `
+)
 }
 
-const handleSubmit = async (e) => {
-    e.preventDefault()
+async function request_openai(user){
+    try{
+        console.log(user_info)
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {role: "system", content: "I want you to act as an interviewer. I will be the candidate and you will ask me the interview questions for a certain position. I want you to only reply as the interviewer. Do not write all the conservation at once. I want you to only do the interview with me. Ask me the questions and wait for my answers. Do not write explanations. Ask me the questions one by one like an interviewer does and wait for my answers."},
+                {role: "user", content: `${user}`},
+                {role: "assistant", "content": `${user_info.join(', ')}`},
+                // {"role": "user", "content": "Where was it played?"}
+            ]
+        });
+        const reply = response.data.choices[0].message.content
+        console.log(reply)
+        return reply
+    }
+    catch (e) {
+        console.log(e)
+        alert(e)
+    }
+}
 
-    const data = new FormData(form)
+const handleSubmit = async (e) =>{
+    e.preventDefault();
+    const data = new FormData(form);
+    // user's chat stipe
+    const user = String(data.get('prompt'))
+    chatcontainer.innerHTML += chatStripe(false,user);
+    user_info.push(user)
 
-    // user's chatstripe
-    chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
-
-    // to clear the textarea input 
     form.reset()
 
     // bot's chatstripe
-    const uniqueId = generateUniqueId()
-    chatContainer.innerHTML += chatStripe(true, " ", uniqueId)
+    const uniqueID = generateUniqueID();
+    chatcontainer.innerHTML += chatStripe(true,"", uniqueID);
 
-    // to focus scroll to the bottom 
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    chatcontainer.scrollTop = chatcontainer.scrollHeight;
 
-    // specific message div 
-    const messageDiv = document.getElementById(uniqueId)
+    const msgDiv = document.getElementById(uniqueID);
 
-    // messageDiv.innerHTML = "..."
-    loader(messageDiv)
+    loader(msgDiv);
 
-    const response = await fetch('https://codex-im0y.onrender.com/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            prompt: data.get('prompt')
-        })
-    })
+
+
+    const response = await request_openai(data.get('prompt'),'')
 
     clearInterval(loadInterval)
-    messageDiv.innerHTML = " "
+    msgDiv.innerHTML = "";
 
-    if (response.ok) {
-        const data = await response.json();
-        const parsedData = data.bot.trim() // trims any trailing spaces/'\n' 
+    const parsedData = String(response).trim()
+    typeText(msgDiv,parsedData)
 
-        typeText(messageDiv, parsedData)
-    } else {
-        const err = await response.text()
-
-        messageDiv.innerHTML = "Something went wrong"
-        alert(err)
-    }
 }
 
-form.addEventListener('submit', handleSubmit)
-form.addEventListener('keyup', (e) => {
-    if (e.keyCode === 13) {
-        handleSubmit(e)
+form.addEventListener('submit', handleSubmit);
+form.addEventListener('keyup', (e)=>{
+    if (e.keyCode===13){
+        handleSubmit(e);
     }
 })
+
+
+async function greeting(){
+    const bot_greeting =  await request_openai('Ask me which position I aim for')
+    const uniqueID = generateUniqueID();
+
+    chatcontainer.innerHTML += chatStripe(true,"", uniqueID);
+    chatcontainer.scrollTop = chatcontainer.scrollHeight;
+    const msgDiv = document.getElementById(uniqueID);
+    loader(msgDiv);
+
+
+    clearInterval(loadInterval)
+    msgDiv.innerHTML = "";
+
+    typeText(msgDiv,bot_greeting)
+}
+
+await greeting()

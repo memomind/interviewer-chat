@@ -1,4 +1,6 @@
-# Build and Deploy Your Own ChatGPT AI Application That Will Help You Code
-![Open AI CodeGPT](https://i.ibb.co/LS4DRhb/image-257.png)
-
-### Launch your development career with project-based coaching - https://www.jsmastery.pro
+1. `npm create vite@latest client --template vanilla`
+2. `cd client`
+3. `npm install`
+4. `cd ../server`
+5. `npm init -y`
+6. `npm install cors dotenv express nodemon openai`
