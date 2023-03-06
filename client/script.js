@@ -1,5 +1,7 @@
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
+import express from 'express'
+import cors from 'cors'
 import {Configuration, OpenAIApi} from 'openai';
 import * as dotenv from 'dotenv'
 
